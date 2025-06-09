@@ -1,22 +1,22 @@
 #include <iostream>
 using namespace std;
 
-void Exchange(int* a, int* b);
+void Exchange(int& a, int& b);
 
 void main()
 {
 	setlocale(LC_ALL, "");
 	int a = 2, b = 3;
 	cout << a << "\t" << b << endl;
-	Exchange(&a, &b);
+	Exchange(a, b);
 	cout << a << "\t" << b << endl;
 }
 
-void Exchange(int* a, int* b)
+void Exchange(int& a, int& b)
 {
-	int buffer = *a;
-	*a = *b;
-	*b = buffer;
+	int buffer = a;
+	a = b;
+	b = buffer;
 }
 /*
 Передача параметров в функцию:
@@ -38,4 +38,5 @@ void Exchange(int* a, int* b)
 При вызове такой функции, нужно взять адреса передаваемых переменных. Следовательно, в нее скопируются не значения, а адреса передаваемых переменных.
 
 Передача параметров по ссылке:
+Для того чтобы передать параметры по ссылке, нужно чтобы принимаемые параметры были ссылками
 */
