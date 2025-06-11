@@ -1,8 +1,11 @@
 #include <iostream>
 using namespace std;
+#define tab "\t"
 
-void FillRand(int arr[], const int n);
+void FillRand(int arr[], const int n, int minRand = 0, int maxRand = 100);
+void FillRand(int** arr, const int rows, const int cols, int minRand = 0, int maxRand = 100);
 void Print(int arr[], const int n);
+void Print(int** arr, const int rows, const int cols);
 
 int* push_back(int arr[], int& n, const int value);
 int* push_front(int arr[], int& n, const int value);
@@ -10,9 +13,18 @@ int* push_front(int arr[], int& n, const int value);
 int* pop_back(int arr[], int& n);
 int* pop_front(int arr[], int& n);
 
+int** push_row_back(int** arr, int& rows, const int cols );
+
+void push_col_back(int** arr, const int rows, int& cols);
+
+//#define DYNAMIC_MEMORY_1 - //Cntrl+Shift+U - смена регистра
+#define DYNAMIC_MEMORY_2
+
 void main()
 {
 	setlocale(LC_ALL, "");
+
+#ifdef DYNAMIC_MEMORY_1
 	int n;
 	cout << "Введите размер массива: "; cin >> n;
 	int* arr = new int[n]; //Объявление динамического массива
@@ -36,15 +48,85 @@ void main()
 	Print(arr, n);
 
 	//delete[] arr;
+
+#endif DYNAMIC_MEMORY_1
+
+/*
+Двумерные динамические маасивы:
+
+Для того, чтобы объявить двумерный динамический массив нужно объявить указатель на указатель и выделить память для массива указателей, который будет хранить адреса строк двумерного массива
+и только после этого нужно выделять память под строки. 
+
+Все это делается следующим образом:
+*/
+
+	int rows;
+	int cols;
+
+	cout << "Введите количество строк: "; cin >> rows;
+	cout << "Введите количество элементов строки: "; cin >> cols;
+
+	//1) Создаем массив указателей:
+
+	int** arr = new int* [rows];
+
+	//2) Выделяем память под строки:
+	for (int i = 0; i < rows; i++)
+	{
+		arr[i] = new int[cols];
+	}
+	
+	FillRand(arr, rows, cols);
+	Print(arr, rows, cols);
+
+	arr = push_row_back(arr, rows, cols);
+	FillRand(arr[rows - 1], cols, 100, 1000);
+	Print(arr, rows, cols);
+	
+	push_col_back(arr, rows, cols);
+	for (int i = 0; i < rows; i++)
+	{
+		arr[i][cols - 1] = rand() % 1000;
+	}
+	Print(arr, rows, cols);
+
+//При удалении двумерного массива сначала удалются строки, как правило это происходит в цикле, и только после этого удаляется массив указателей
+
+	//1) Сначала удаляются строки двумерного массива:
+	for (int i = 0; i < rows; i++)
+	{
+		delete[] arr[i];
+	}
+
+	//2) Только теперь можно удалитьм массив указателей:
+	delete[] arr;
+
+/*
+Обращаться к элементам двумерного динамического массива можно точно так же, как и к элементам двумерного статического массива, через арифметику указателей и оператор разыменования
+или через оператор индексирования.
+
+Для того, чтобы передать двумерный динамический массив в функцию, достаточно, чтобы функция принимала указатель на указатель и размер массива.
+*/
 }
 
-void FillRand(int arr[], const int n)
+void FillRand(int arr[], const int n, int minRand, int maxRand)
 {
 	for (int i = 0; i < n; i++)
 	{
-		*(arr + i) = rand() % 100; //Через арифметику указателей и оператор разыменовывания
+		*(arr + i) = rand() % (maxRand - minRand) + minRand; //Через арифметику указателей и оператор разыменовывания
 	}
 }
+void FillRand(int** arr, const int rows, const int cols, int minRand, int maxRand)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			arr[i][j] = rand() % (maxRand-minRand) + minRand;
+		}
+	}
+}
+
 void Print(int arr[], const int n)
 {
 	cout << arr << endl;
@@ -52,6 +134,18 @@ void Print(int arr[], const int n)
 	for (int i = 0; i < n; i++)
 	{
 		cout << arr[i] << "\t"; //Через оператор индексирования
+	}
+	cout << endl;
+}
+void Print(int** arr, const int rows, const int cols)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			cout << arr[i][j] << tab;
+		}
+		cout << endl;
 	}
 	cout << endl;
 }
@@ -131,6 +225,53 @@ int* pop_front(int arr[], int& n)
 	return buffer;
 }
 
+int** push_row_back(int** arr, int& rows, const int cols)
+{
+	//1) Создаем буферный массив указателей:
+	int** buffer = new int* [rows+1];
+
+	//2) Копируем адреса строк в новый массив:
+	for (int i = 0; i < rows; i++)
+	{
+		buffer[i] = arr[i];
+	}
+	
+	//3) Удаляем исходный массив указателей
+	delete[] arr;
+
+	//4) Добавляем добавляемую строку:
+
+	buffer[rows] = new int[cols] {};
+
+	//5) После добавления строки, количество строк увеличивается на 1:
+
+	rows++;
+
+	//6) Возвращаем новый массив:
+	return buffer;
+}
+void push_col_back(int** arr, const int rows, int& cols)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		//1) Создаем буфферную строку нужного размера:
+		int* buffer = new int[cols + 1] {};
+
+		//2) Копируем элементы из исходной строки в буферную:
+
+		for (int j = 0; j < cols; j++)
+		{
+			buffer[j] = arr[i][j];
+		}
+		//3) Удаляем исходную строку:
+
+		delete[] arr[i];
+
+		//4) Подменяем адрес исходной строки адресом новой строки:
+		arr[i] = buffer;
+	}
+	cols++;
+}
 /*
 Динамические массивы:
 
